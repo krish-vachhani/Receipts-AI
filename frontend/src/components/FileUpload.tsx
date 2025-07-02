@@ -3,9 +3,10 @@ import UploadImageIcon from "./UploadImageIcon";
 
 type FileUploadProps = {
   onFileSelect?: (file: File) => void;
+  onSubmit?: (file: File) => void;
 };
 
-const FileUpload = ({ onFileSelect }: FileUploadProps) => {
+const FileUpload = ({ onFileSelect, onSubmit }: FileUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -67,6 +68,12 @@ const FileUpload = ({ onFileSelect }: FileUploadProps) => {
     inputRef.current?.click();
   };
 
+  const handleSubmit = () => {
+    if (file) {
+      onSubmit?.(file);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div
@@ -114,6 +121,12 @@ const FileUpload = ({ onFileSelect }: FileUploadProps) => {
           <p className="text-xs text-green-600 mt-1">
             Size: {(file.size / 1024 / 1024).toFixed(2)} MB
           </p>
+          <button
+            onClick={handleSubmit}
+            className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Analyze Receipt
+          </button>
         </div>
       )}
     </div>
