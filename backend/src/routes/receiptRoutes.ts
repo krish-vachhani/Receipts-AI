@@ -15,6 +15,6 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-router.post("/extract", upload.single("receipt"), extractReceipt);
+router.post("/extract-receipt-details", upload.single("receipt"), extractReceipt);
 
 export default router;

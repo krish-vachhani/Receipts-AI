@@ -7,7 +7,7 @@ const app = express();
 
 app.use(cors());
 
-app.use("/api/receipts", receiptRouter);
+app.use("/api", receiptRouter);
 
 const port = 3000;
 app.listen(port, () => {

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { handleUpload } from "../utils/storage";
+import { extractReceiptData } from "../utils/aiClient";
 
 export async function extractReceipt(
   req: Request,
@@ -20,8 +21,12 @@ export async function extractReceipt(
   try {
     const uploadResult = await handleUpload(dataUri);
     const imageUrl = uploadResult.secure_url;
-
-    res.status(200).json({ imageUrl });
+    const receiptData = await extractReceiptData(imageUrl);
+    res.json({
+      id: Date.now(),
+      image_url: imageUrl,
+      ...receiptData,
+    });
   } catch (error) {
     next(error);
   }
