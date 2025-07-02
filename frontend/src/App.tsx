@@ -1,12 +1,12 @@
-import './App.css'
+import "./App.css";
+import FileUpload from "./components/FileUpload";
 
 function App() {
-
   return (
     <>
-      <h1 className='text-3xl font-bold underline'>Hello World</h1>
+      <FileUpload />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
