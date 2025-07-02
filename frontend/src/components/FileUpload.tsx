@@ -1,15 +1,30 @@
 import React, { useState, useRef } from "react";
 import UploadImageIcon from "./UploadImageIcon";
 
+type ReceiptResponse = {
+  id: number;
+  image_url: string;
+  merchant?: string;
+  total?: number;
+  date?: string;
+  items?: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
+};
+
 type FileUploadProps = {
   onFileSelect?: (file: File) => void;
   onSubmit?: (file: File) => void;
+  isLoading?: boolean;
 };
 
-const FileUpload = ({ onFileSelect, onSubmit }: FileUploadProps) => {
+const FileUpload = ({ onFileSelect, onSubmit, isLoading = false }: FileUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [response, setResponse] = useState<ReceiptResponse | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const checkFile = (file: File) => {
@@ -45,6 +60,7 @@ const FileUpload = ({ onFileSelect, onSubmit }: FileUploadProps) => {
   };
 
   const onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (isLoading) return;
     event.preventDefault();
     setIsDragging(true);
   };
@@ -55,6 +71,7 @@ const FileUpload = ({ onFileSelect, onSubmit }: FileUploadProps) => {
   };
 
   const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    if (isLoading) return;
     event.preventDefault();
     setIsDragging(false);
 
@@ -65,20 +82,50 @@ const FileUpload = ({ onFileSelect, onSubmit }: FileUploadProps) => {
   };
 
   const openFileDialog = () => {
+    if (isLoading) return;
     inputRef.current?.click();
   };
 
-  const handleSubmit = () => {
-    if (file) {
-      onSubmit?.(file);
+  const handleSubmit = async () => {
+    if (file && !isLoading) {
+      try {
+        const formData = new FormData();
+        formData.append('receipt', file);
+
+        const response = await fetch('http://localhost:3000/api/extract-receipt-details', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to analyze receipt');
+        }
+
+        const data = await response.json();
+        setResponse(data);
+        onSubmit?.(file);
+      } catch (error) {
+        setErrorMsg('Failed to analyze receipt. Please try again.');
+        console.error('Upload error:', error);
+      }
     }
+  };
+
+  const removeFile = () => {
+    setFile(null);
+    setErrorMsg("");
+    setResponse(null);
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
       <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer ${
-          isDragging ? "border-blue-400 bg-blue-50" : "border-gray-300"
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          isLoading
+            ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+            : isDragging
+            ? "border-blue-400 bg-blue-50 cursor-pointer"
+            : "border-gray-300 cursor-pointer hover:border-gray-400"
         }`}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -121,12 +168,37 @@ const FileUpload = ({ onFileSelect, onSubmit }: FileUploadProps) => {
           <p className="text-xs text-green-600 mt-1">
             Size: {(file.size / 1024 / 1024).toFixed(2)} MB
           </p>
-          <button
-            onClick={handleSubmit}
-            className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Analyze Receipt
-          </button>
+          <div className="flex space-x-2 mt-3">
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                isLoading
+                  ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Analyzing...
+                </div>
+              ) : (
+                "Analyze Receipt"
+              )}
+            </button>
+            <button
+              onClick={removeFile}
+              disabled={isLoading}
+              className={`py-2 px-3 rounded-lg transition-colors ${
+                isLoading
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-red-500 text-white hover:bg-red-600"
+              }`}
+            >
+              Remove
+            </button>
+          </div>
         </div>
       )}
     </div>
