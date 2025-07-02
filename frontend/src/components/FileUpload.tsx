@@ -4,14 +4,15 @@ import UploadImageIcon from "./UploadImageIcon";
 type ReceiptResponse = {
   id: number;
   image_url: string;
-  merchant?: string;
-  total?: number;
-  date?: string;
-  items?: Array<{
-    name: string;
-    price: number;
-    quantity: number;
+  date: string;
+  currency: string;
+  vendor_name: string;
+  receipt_items: Array<{
+    item_name: string;
+    item_cost: number;
   }>;
+  tax: number;
+  total: number;
 };
 
 type FileUploadProps = {
@@ -159,7 +160,7 @@ const FileUpload = ({ onFileSelect, onSubmit, isLoading = false }: FileUploadPro
         </div>
       )}
 
-      {file && (
+      {file && !response && (
         <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <h3 className="text-sm font-medium text-green-800 mb-2">
             Selected File:
@@ -198,6 +199,79 @@ const FileUpload = ({ onFileSelect, onSubmit, isLoading = false }: FileUploadPro
             >
               Remove
             </button>
+          </div>
+        </div>
+      )}
+
+      {response && (
+        <div className="mt-4 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-shrink-0">
+              <img
+                src={response.image_url}
+                alt="Receipt"
+                className="w-full max-w-sm rounded-lg border border-gray-200"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Receipt Analysis
+              </h3>
+              
+              <div className="space-y-3">
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Vendor:</span>
+                  <p className="text-sm text-gray-900">{response.vendor_name}</p>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Date:</span>
+                  <p className="text-sm text-gray-900">{response.date}</p>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Currency:</span>
+                  <p className="text-sm text-gray-900">{response.currency}</p>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Tax:</span>
+                  <p className="text-sm text-gray-900">
+                    {response.currency} {response.tax.toFixed(2)}
+                  </p>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Total:</span>
+                  <p className="text-lg font-semibold text-green-600">
+                    {response.currency} {response.total.toFixed(2)}
+                  </p>
+                </div>
+                
+                {response.receipt_items && response.receipt_items.length > 0 && (
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Items:</span>
+                    <div className="mt-2 space-y-1">
+                      {response.receipt_items.map((item, index) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span className="text-gray-700">{item.item_name}</span>
+                          <span className="text-gray-900">
+                            {response.currency} {item.item_cost.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={removeFile}
+                className="mt-6 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Upload New Receipt
+              </button>
+            </div>
           </div>
         </div>
       )}
