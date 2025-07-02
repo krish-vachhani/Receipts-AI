@@ -18,14 +18,15 @@ type ReceiptResponse = {
 type FileUploadProps = {
   onFileSelect?: (file: File) => void;
   onSubmit?: (file: File) => void;
-  isLoading?: boolean;
+  onLoadingChange?: (loading: boolean) => void;
 };
 
-const FileUpload = ({ onFileSelect, onSubmit, isLoading = false }: FileUploadProps) => {
+const FileUpload = ({ onFileSelect, onSubmit, onLoadingChange }: FileUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [response, setResponse] = useState<ReceiptResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const checkFile = (file: File) => {
@@ -89,6 +90,9 @@ const FileUpload = ({ onFileSelect, onSubmit, isLoading = false }: FileUploadPro
 
   const handleSubmit = async () => {
     if (file && !isLoading) {
+      setIsLoading(true);
+      onLoadingChange?.(true);
+      
       try {
         const formData = new FormData();
         formData.append('receipt', file);
@@ -108,6 +112,9 @@ const FileUpload = ({ onFileSelect, onSubmit, isLoading = false }: FileUploadPro
       } catch (error) {
         setErrorMsg('Failed to analyze receipt. Please try again.');
         console.error('Upload error:', error);
+      } finally {
+        setIsLoading(false);
+        onLoadingChange?.(false);
       }
     }
   };
