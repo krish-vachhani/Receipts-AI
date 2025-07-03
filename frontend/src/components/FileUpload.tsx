@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import UploadImageIcon from "./UploadImageIcon";
+import { useAuth } from "../context/AuthContext";
 
 type ReceiptResponse = {
   id: number;
@@ -32,6 +33,7 @@ const FileUpload = ({
   const [response, setResponse] = useState<ReceiptResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { token } = useAuth();
 
   const checkFile = (file: File) => {
     const imageTypes = /\.(jpe?g|png)$/i;
@@ -105,6 +107,9 @@ const FileUpload = ({
           "http://localhost:3000/api/extract-receipt-details",
           {
             method: "POST",
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
             body: formData,
           }
         );
